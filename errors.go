@@ -10,6 +10,10 @@ import (
 // [*NotFoundError] to get detailed information.
 var ErrNotFound = errors.New("bcr: not found")
 
+// ErrListingNotSupported is returned when a registry does not support
+// listing modules (e.g., HTTP registry without index.json).
+var ErrListingNotSupported = errors.New("bcr: listing modules not supported")
+
 // NotFoundError provides details about what was not found.
 type NotFoundError struct {
 	// Module is the module name that was queried.

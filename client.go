@@ -273,6 +273,29 @@ func (c *Client) VersionExists(ctx context.Context, module, version string) (boo
 	return meta.HasVersion(version), nil
 }
 
+// ListModules returns all available module names from the registry.
+//
+// This requires the registry to provide a modules/index.json file.
+// Returns [ErrListingNotSupported] if the index is not available.
+func (c *Client) ListModules(ctx context.Context) ([]string, error) {
+	urlPath := path.Join("modules", "index.json")
+
+	data, err := c.fetch(ctx, urlPath, "", "")
+	if err != nil {
+		if isNotFound(err) {
+			return nil, ErrListingNotSupported
+		}
+		return nil, err
+	}
+
+	var modules []string
+	if err := json.Unmarshal(data, &modules); err != nil {
+		return nil, fmt.Errorf("bcr: failed to parse module index: %w", err)
+	}
+
+	return modules, nil
+}
+
 // fetch makes an HTTP GET request and returns the response body.
 func (c *Client) fetch(ctx context.Context, urlPath, module, version string) ([]byte, error) {
 	u, err := url.JoinPath(c.baseURL, urlPath)

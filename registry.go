@@ -26,3 +26,14 @@ type Registry interface {
 
 // Ensure Client implements Registry at compile time.
 var _ Registry = (*Client)(nil)
+
+// ModuleLister is an optional interface for registries that support
+// listing all available modules.
+//
+// Not all registries support this operation (e.g., HTTP registries
+// without an index.json file).
+type ModuleLister interface {
+	// ListModules returns all available module names.
+	// Returns [ErrListingNotSupported] if the registry cannot list modules.
+	ListModules(ctx context.Context) ([]string, error)
+}

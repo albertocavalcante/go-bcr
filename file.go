@@ -119,5 +119,37 @@ func (r *FileRegistry) String() string {
 	return "file://" + r.root
 }
 
+// ListModules returns all module names in the registry.
+func (r *FileRegistry) ListModules(ctx context.Context) ([]string, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	modulesDir := filepath.Join(r.root, "modules")
+	entries, err := os.ReadDir(modulesDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrListingNotSupported
+		}
+		return nil, fmt.Errorf("bcr: failed to list modules: %w", err)
+	}
+
+	var modules []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			// Verify it's a valid module (has metadata.json)
+			metaPath := filepath.Join(modulesDir, entry.Name(), "metadata.json")
+			if _, err := os.Stat(metaPath); err == nil {
+				modules = append(modules, entry.Name())
+			}
+		}
+	}
+
+	return modules, nil
+}
+
 // Ensure FileRegistry implements Registry at compile time.
 var _ Registry = (*FileRegistry)(nil)
+
+// Ensure FileRegistry implements ModuleLister at compile time.
+var _ ModuleLister = (*FileRegistry)(nil)
