@@ -318,7 +318,93 @@ func TestMetadataHelpers(t *testing.T) {
 		if nilMeta.HasVersion("1.0.0") {
 			t.Error("nil.HasVersion() should return false")
 		}
+		if nilMeta.LatestStable() != "" {
+			t.Error("nil.LatestStable() should return empty")
+		}
 	})
+}
+
+func TestLatestStable(t *testing.T) {
+	tests := []struct {
+		name     string
+		versions []string
+		yanked   map[string]string
+		want     string
+	}{
+		{
+			name:     "prefers stable over prerelease",
+			versions: []string{"1.0.0", "2.0.0-rc1", "2.0.0-beta"},
+			want:     "1.0.0",
+		},
+		{
+			name:     "skips yanked stable",
+			versions: []string{"1.0.0", "1.1.0", "2.0.0"},
+			yanked:   map[string]string{"2.0.0": "broken"},
+			want:     "1.1.0",
+		},
+		{
+			name:     "falls back to prerelease if no stable",
+			versions: []string{"1.0.0-alpha", "1.0.0-beta", "1.0.0-rc1"},
+			want:     "1.0.0-rc1",
+		},
+		{
+			name:     "all yanked returns empty",
+			versions: []string{"1.0.0", "2.0.0"},
+			yanked:   map[string]string{"1.0.0": "bad", "2.0.0": "bad"},
+			want:     "",
+		},
+		{
+			name:     "empty versions",
+			versions: []string{},
+			want:     "",
+		},
+		{
+			name:     "various prerelease formats",
+			versions: []string{"1.0.0-alpha", "1.0.0-beta.1", "1.0.0-rc1", "1.0.0-dev", "1.0.0-pre", "2.0.0"},
+			want:     "2.0.0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			meta := &Metadata{
+				Versions:       tt.versions,
+				YankedVersions: tt.yanked,
+			}
+			if got := meta.LatestStable(); got != tt.want {
+				t.Errorf("LatestStable() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsPrerelease(t *testing.T) {
+	tests := []struct {
+		version string
+		want    bool
+	}{
+		{"1.0.0", false},
+		{"2.3.4", false},
+		{"0.50.1", false},
+		{"1.0.0-rc1", true},
+		{"1.0.0-rc.1", true},
+		{"1.0.0-alpha", true},
+		{"1.0.0-alpha.1", true},
+		{"1.0.0-beta", true},
+		{"1.0.0-beta.2", true},
+		{"1.0.0-dev", true},
+		{"1.0.0-pre", true},
+		{"1.0.0-preview", true},
+		{"1.0.0+build", false}, // build metadata is not prerelease
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.version, func(t *testing.T) {
+			if got := IsPrerelease(tt.version); got != tt.want {
+				t.Errorf("IsPrerelease(%q) = %v, want %v", tt.version, got, tt.want)
+			}
+		})
+	}
 }
 
 func TestSourceType(t *testing.T) {

@@ -1,5 +1,7 @@
 package bcr
 
+import "strings"
+
 // Metadata contains information about a module in the registry.
 //
 // This corresponds to the metadata.json file in a Bazel registry.
@@ -52,6 +54,50 @@ func (m *Metadata) Latest() string {
 		}
 	}
 	return ""
+}
+
+// LatestStable returns the latest non-yanked, non-prerelease version.
+// Falls back to the latest non-yanked prerelease if no stable version exists.
+// Returns empty string if all versions are yanked.
+func (m *Metadata) LatestStable() string {
+	if m == nil || len(m.Versions) == 0 {
+		return ""
+	}
+
+	// First pass: find latest stable (non-prerelease, non-yanked)
+	for i := len(m.Versions) - 1; i >= 0; i-- {
+		v := m.Versions[i]
+		if m.IsYanked(v) {
+			continue
+		}
+		if !IsPrerelease(v) {
+			return v
+		}
+	}
+
+	// Second pass: any non-yanked version (including prerelease)
+	for i := len(m.Versions) - 1; i >= 0; i-- {
+		v := m.Versions[i]
+		if !m.IsYanked(v) {
+			return v
+		}
+	}
+
+	return ""
+}
+
+// prereleaseIndicators are common version string patterns indicating prereleases.
+var prereleaseIndicators = []string{"-rc", "-alpha", "-beta", "-dev", "-pre"}
+
+// IsPrerelease reports whether a version string indicates a prerelease.
+// Checks for common prerelease indicators: -rc, -alpha, -beta, -dev, -pre
+func IsPrerelease(version string) bool {
+	for _, indicator := range prereleaseIndicators {
+		if strings.Contains(version, indicator) {
+			return true
+		}
+	}
+	return false
 }
 
 // HasVersion reports whether the given version exists.
