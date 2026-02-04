@@ -1,6 +1,15 @@
 # go-bcr
 
+[![CI](https://github.com/albertocavalcante/go-bcr/actions/workflows/ci.yml/badge.svg)](https://github.com/albertocavalcante/go-bcr/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/albertocavalcante/go-bcr.svg)](https://pkg.go.dev/github.com/albertocavalcante/go-bcr)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/albertocavalcante/go-bcr)](go.mod)
+[![License](https://img.shields.io/github/license/albertocavalcante/go-bcr)](LICENSE)
+
 A lightweight, zero-dependency Go client for the [Bazel Central Registry](https://bcr.bazel.build).
+
+## Requirements
+
+**Go 1.25+** — This package uses `iter.Seq2` from the standard library.
 
 ## Installation
 
@@ -8,11 +17,7 @@ A lightweight, zero-dependency Go client for the [Bazel Central Registry](https:
 go get github.com/albertocavalcante/go-bcr
 ```
 
-Requires Go 1.23 or later.
-
 ## Usage
-
-### Basic
 
 ```go
 package main
