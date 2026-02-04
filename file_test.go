@@ -162,11 +162,31 @@ func TestNewFileRegistryFromURL(t *testing.T) {
 		wantPath string
 		wantOK   bool
 	}{
+		// file:// URLs
 		{"file:///path/to/registry", "/path/to/registry", true},
 		{"file:///C:/path/to/registry", "/C:/path/to/registry", true},
+
+		// Unix absolute paths
 		{"/absolute/path", "/absolute/path", true},
+		{"/", "/", true},
+
+		// Windows absolute paths
+		{`C:\path\to\registry`, `C:\path\to\registry`, true},
+		{`D:\registry`, `D:\registry`, true},
+		{"C:/path/to/registry", "C:/path/to/registry", true},
+		{`c:\lowercase`, `c:\lowercase`, true},
+		{`Z:\some\path`, `Z:\some\path`, true},
+
+		// Not file paths
 		{"https://example.com", "", false},
+		{"http://example.com", "", false},
 		{"relative/path", "", false},
+		{"./relative", "", false},
+		{"../parent", "", false},
+
+		// Windows relative paths (NOT absolute)
+		{"C:relative", "", false},
+		{"C:", "", false},
 	}
 
 	for _, tt := range tests {
@@ -178,6 +198,45 @@ func TestNewFileRegistryFromURL(t *testing.T) {
 			}
 			if ok && reg.root != tt.wantPath {
 				t.Errorf("root = %q, want %q", reg.root, tt.wantPath)
+			}
+		})
+	}
+}
+
+func TestIsWindowsAbsolutePath(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		// Valid Windows absolute paths
+		{`C:\`, true},
+		{`C:\path`, true},
+		{`C:\path\to\registry`, true},
+		{"C:/", true},
+		{"C:/path", true},
+		{"C:/path/to/registry", true},
+		{`D:\registry`, true},
+		{"d:/registry", true},
+		{`Z:\some\path`, true},
+		{`a:\lowercase`, true},
+
+		// Invalid - not absolute paths
+		{"", false},
+		{"C", false},
+		{"C:", false},
+		{"C:path", false},       // Relative to current dir on C:
+		{"/unix/path", false},   // Unix path
+		{"relative/path", false},
+		{"./relative", false},
+		{"1:/invalid", false}, // Invalid drive letter
+		{"@:/invalid", false}, // Invalid drive letter
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			got := isWindowsAbsolutePath(tt.path)
+			if got != tt.want {
+				t.Errorf("isWindowsAbsolutePath(%q) = %v, want %v", tt.path, got, tt.want)
 			}
 		})
 	}
