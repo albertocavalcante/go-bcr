@@ -149,6 +149,11 @@ func (r *FileRegistry) String() string {
 	return "file://" + r.root
 }
 
+// Type returns the registry type ("file").
+func (r *FileRegistry) Type() string {
+	return "file"
+}
+
 // ListModules returns all module names in the registry.
 func (r *FileRegistry) ListModules(ctx context.Context) ([]string, error) {
 	if err := ctx.Err(); err != nil {

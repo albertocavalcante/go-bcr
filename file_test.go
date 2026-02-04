@@ -241,3 +241,10 @@ func TestIsWindowsAbsolutePath(t *testing.T) {
 		})
 	}
 }
+
+func TestFileRegistryType(t *testing.T) {
+	reg := NewFileRegistry("/path/to/registry")
+	if got := reg.Type(); got != "file" {
+		t.Errorf("Type() = %q, want %q", got, "file")
+	}
+}

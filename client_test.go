@@ -527,3 +527,46 @@ func TestContextCancellation(t *testing.T) {
 		t.Fatal("expected error for cancelled context")
 	}
 }
+
+func TestClientString(t *testing.T) {
+	tests := []struct {
+		name    string
+		baseURL string
+		want    string
+	}{
+		{"default", DefaultBaseURL, DefaultBaseURL},
+		{"custom https", "https://example.com/registry", "https://example.com/registry"},
+		{"custom http", "http://localhost:8080", "http://localhost:8080"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := New(WithBaseURL(tt.baseURL))
+			if got := c.String(); got != tt.want {
+				t.Errorf("String() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClientType(t *testing.T) {
+	tests := []struct {
+		name    string
+		baseURL string
+		want    string
+	}{
+		{"https", "https://bcr.bazel.build", "https"},
+		{"http", "http://localhost:8080", "http"},
+		{"https with path", "https://example.com/registry", "https"},
+		{"http with path", "http://example.com/registry", "http"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := New(WithBaseURL(tt.baseURL))
+			if got := c.Type(); got != tt.want {
+				t.Errorf("Type() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

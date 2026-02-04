@@ -336,6 +336,19 @@ func (c *Client) fetch(ctx context.Context, urlPath, module, version string) ([]
 	return data, nil
 }
 
+// String returns the base URL of the registry.
+func (c *Client) String() string {
+	return c.baseURL
+}
+
+// Type returns the registry type ("http" or "https").
+func (c *Client) Type() string {
+	if len(c.baseURL) >= 8 && c.baseURL[:8] == "https://" {
+		return "https"
+	}
+	return "http"
+}
+
 // isNotFound reports whether err indicates a not-found condition.
 func isNotFound(err error) bool {
 	if err == nil {
