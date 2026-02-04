@@ -33,6 +33,8 @@ func NewFileRegistry(root string) *FileRegistry {
 // Supported formats:
 //   - file:///path/to/registry
 //   - /absolute/path (Unix)
+//   - C:\path\to\registry (Windows)
+//   - C:/path/to/registry (Windows with forward slashes)
 //
 // Returns (nil, false) if the URL is not a file path.
 func NewFileRegistryFromURL(url string) (*FileRegistry, bool) {
@@ -47,7 +49,35 @@ func NewFileRegistryFromURL(url string) (*FileRegistry, bool) {
 		return NewFileRegistry(url), true
 	}
 
+	// Handle Windows absolute paths (C:\... or C:/...)
+	if isWindowsAbsolutePath(url) {
+		return NewFileRegistry(url), true
+	}
+
 	return nil, false
+}
+
+// isWindowsAbsolutePath checks if a path is a Windows absolute path.
+// Matches patterns like: C:\path, C:/path, D:\path, d:/path
+// Does NOT match: C:path (relative), C: (just drive), or UNC paths.
+func isWindowsAbsolutePath(path string) bool {
+	if len(path) < 3 {
+		return false
+	}
+
+	// Check for drive letter (A-Z or a-z)
+	letter := path[0]
+	if !((letter >= 'A' && letter <= 'Z') || (letter >= 'a' && letter <= 'z')) {
+		return false
+	}
+
+	// Must be followed by colon
+	if path[1] != ':' {
+		return false
+	}
+
+	// Must be followed by path separator (\ or /)
+	return path[2] == '\\' || path[2] == '/'
 }
 
 // Metadata fetches module metadata from the filesystem.
