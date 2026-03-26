@@ -1,3 +1,3 @@
 module github.com/albertocavalcante/go-bcr
 
-go 1.25
+go 1.26

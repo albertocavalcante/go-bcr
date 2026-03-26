@@ -160,6 +160,13 @@ type Source struct {
 
 	// Path is the local filesystem path (for local_path type).
 	Path string `json:"path,omitempty"`
+
+	// --- Documentation fields ---
+
+	// DocsURL is the URL of a docs archive (typically docs.tar.gz)
+	// containing Stardoc-generated documentation for this module version.
+	// This field is optional; most modules do not publish documentation.
+	DocsURL string `json:"docs_url,omitempty"`
 }
 
 // SourceType returns the effective source type, defaulting to "archive".
