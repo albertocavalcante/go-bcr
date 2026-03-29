@@ -124,16 +124,25 @@ func extractTarGz(r io.Reader, dir string) error {
 			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 				return fmt.Errorf("mkdir %s: %w", filepath.Dir(target), err)
 			}
-			f, err := os.Create(target)
-			if err != nil {
-				return fmt.Errorf("create %s: %w", target, err)
+			if err := extractFile(tr, target); err != nil {
+				return err
 			}
-			// Limit extraction size to 50MB per file.
-			if _, err := io.Copy(f, io.LimitReader(tr, 50<<20)); err != nil {
-				f.Close()
-				return fmt.Errorf("write %s: %w", target, err)
-			}
-			f.Close()
 		}
 	}
+}
+
+// extractFile extracts a single file from the tar reader to the target path.
+// Uses defer to ensure the file handle is always closed.
+func extractFile(tr io.Reader, target string) error {
+	const maxFileSize = 50 << 20 // 50MB per file
+	f, err := os.Create(target)
+	if err != nil {
+		return fmt.Errorf("create %s: %w", target, err)
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(f, io.LimitReader(tr, maxFileSize)); err != nil {
+		return fmt.Errorf("write %s: %w", target, err)
+	}
+	return nil
 }
